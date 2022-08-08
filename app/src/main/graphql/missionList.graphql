@@ -1,0 +1,5 @@
+query GetLaunchPast($limit:Int!) {
+    launchesPast(limit: $limit) {
+        mission_name
+    }
+}

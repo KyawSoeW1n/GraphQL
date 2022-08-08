@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 
 import androidx.recyclerview.widget.RecyclerView
 import com.apollographql.apollo3.exception.ApolloException
+import com.aymen.graphql.GetLaunchPastQuery
 import com.aymen.graphql.R
 import com.aymen.graphql.databinding.ActivityMainBinding
 
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity(), UsersAdapter.ClickListener {
     private lateinit var client: ApolloClient
 
     private lateinit var arrayList: ArrayList<UsersListQuery.User>
+    private lateinit var launchPast: ArrayList<GetLaunchPastQuery.LaunchesPast>
     private lateinit var adapter: UsersAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +69,7 @@ class MainActivity : AppCompatActivity(), UsersAdapter.ClickListener {
         lifecycleScope.launchWhenResumed {
             val response = try {
                 client.query(UsersListQuery(10)).execute()
-            }catch (e : ApolloException){
+            } catch (e: ApolloException) {
                 binding.tvLoading.text = resources.getString(R.string.protocol_error)
                 binding.tvLoading.visibility = View.VISIBLE
                 return@launchWhenResumed
@@ -76,7 +79,7 @@ class MainActivity : AppCompatActivity(), UsersAdapter.ClickListener {
                 binding.tvLoading.text = response.errors?.get(0)?.message
                 binding.tvLoading.visibility = View.VISIBLE
                 return@launchWhenResumed
-            }else {
+            } else {
                 arrayList = ArrayList(users)
                 adapter.setUsers(arrayList)
                 if (arrayList.isEmpty()) {
@@ -85,6 +88,32 @@ class MainActivity : AppCompatActivity(), UsersAdapter.ClickListener {
                 } else {
                     binding.tvLoading.visibility = View.GONE
                 }
+            }
+        }
+
+        lifecycleScope.launchWhenResumed {
+            val response = try {
+                client.query(GetLaunchPastQuery(10)).execute()
+            } catch (e: ApolloException) {
+                binding.tvLoading.text = resources.getString(R.string.protocol_error)
+                binding.tvLoading.visibility = View.VISIBLE
+                return@launchWhenResumed
+            }
+            val users = response.data?.launchesPast
+            if (users == null || response.hasErrors()) {
+                binding.tvLoading.text = response.errors?.get(0)?.message
+                binding.tvLoading.visibility = View.VISIBLE
+                return@launchWhenResumed
+            } else {
+                launchPast = ArrayList(users)
+                Log.e("GGWP ", "$launchPast")
+//                adapter.setUsers(arrayList)
+//                if (arrayList.isEmpty()) {
+//                    binding.tvLoading.visibility = View.VISIBLE
+//                    binding.tvLoading.text = resources.getString(R.string.no_data)
+//                } else {
+//                    binding.tvLoading.visibility = View.GONE
+//                }
             }
         }
     }
